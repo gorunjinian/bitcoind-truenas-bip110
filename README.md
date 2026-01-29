@@ -1,46 +1,79 @@
-Bitcoind for Docker (BIP110 UASF)
-===================
+# Bitcoind for Docker (BIP-110 UASF)
 
-Docker image that runs the Bitcoin bitcoind node in a container for easy deployment.
+[![Build and Push Docker Image](https://github.com/gorunjinian/bitcoind-truenas-bip110/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/gorunjinian/bitcoind-truenas-bip110/actions/workflows/docker-publish.yml)
 
-***Note: Credit for this image goes almost entirely to https://github.com/kylemanna/docker-bitcoind. Retropex added optimizations and I modified the dockerfile to get the release from GitHub instead of BitcoinKnots.org so that we use BIP110.***
+Docker image running **Bitcoin Knots v29.2.knots20251110+bip110-v0.1** with UASF BIP-110 support.
 
+## What is BIP-110?
 
-Requirements
-------------
+BIP-110 is a User Activated Soft Fork (UASF) proposal. This Docker image runs a Bitcoin Knots node that signals support for BIP-110. See the [full BIP-110 proposal](https://github.com/dathonohm/bips/blob/reduced-data/bip-0110.mediawiki) for details.
 
-* Physical machine, cloud instance, or VPS that supports Docker (i.e. [Vultr](http://bit.ly/1HngXg0), [Digital Ocean](http://bit.ly/18AykdD), KVM or XEN based VMs) running Ubuntu 14.04 or later (*not OpenVZ containers!*)
-* At least 500 GB to store the block chain files (and always growing!)
-* At least 1 GB RAM + 2 GB swap file
+## Credits
 
-Recommended and tested on unadvertised (only shown within control panel) [Vultr SATA Storage 1024 MB RAM/250 GB disk instance @ $10/mo](http://bit.ly/vultrbitcoind).  Vultr also *accepts Bitcoin payments*!
+- Original docker-bitcoind by [kylemanna](https://github.com/kylemanna/docker-bitcoind)
+- TrueNAS optimizations by [Retropex](https://github.com/Retropex/docker-bitcoind-truenas)
+- BIP-110 binaries by [dathonohm](https://github.com/dathonohm/bitcoin/releases)
+- GPG signed by Luke Dashjr (same key as official Bitcoin Knots)
 
+## Quick Start
 
-Quick Start
------------
+### 1. Create a volume for blockchain data
 
-1. Create a `bitcoind-data` volume to persist the bitcoind blockchain data, should exit immediately.  The `bitcoind-data` container will store the blockchain when the node container is recreated (software upgrade, reboot, etc):
+```bash
+docker volume create --name=bitcoind-data
+```
 
-        docker volume create --name=bitcoind-data
-        docker run -v bitcoind-data:/bitcoin/.bitcoin --name=bitcoind-node -d \
-            -p 8333:8333 \
-            -p 127.0.0.1:8332:8332 \
-            ghcr.io/sethforprivacy/bitcoind:latest
+### 2. Run the node
 
-2. Verify that the container is running and bitcoind node is downloading the blockchain
+```bash
+docker run -v bitcoind-data:/bitcoin/.bitcoin --name=bitcoind-node -d \
+    -p 8333:8333 \
+    -p 127.0.0.1:8332:8332 \
+    ghcr.io/gorunjinian/bitcoind-truenas-bip110:latest
+```
 
-        $ docker ps
-        CONTAINER ID        IMAGE                         COMMAND             CREATED             STATUS              PORTS                                              NAMES
-        d0e1076b2dca        ghcr.io/sethforprivacy/bitcoind:latest     "btc_oneshot"       2 seconds ago       Up 1 seconds        127.0.0.1:8332->8332/tcp, 0.0.0.0:8333->8333/tcp   bitcoind-node
+### 3. Verify the node is running
 
-3. You can then access the daemon's output thanks to the [docker logs command]( https://docs.docker.com/reference/commandline/cli/#logs)
+```bash
+docker ps
+docker logs -f bitcoind-node
+```
 
-        docker logs -f bitcoind-node
+### 4. Check version
 
-4. Install optional init scripts for upstart and systemd are in the `init` directory.
+```bash
+docker exec bitcoind-node bitcoind --version
+# Output: Bitcoin Knots daemon version v29.2.knots20251110+bip110-v0.1
+```
 
+## Docker Image
 
-Documentation
--------------
+| Registry | Image |
+|----------|-------|
+| GitHub Container Registry | `ghcr.io/gorunjinian/bitcoind-truenas-bip110:latest` |
 
-* Additional documentation in the [docs folder](docs).
+### Available Tags
+
+- `latest` - Latest build from master branch
+- `sha-xxxxxxx` - Specific commit builds
+
+## Requirements
+
+- Docker host with at least **500 GB** storage for blockchain
+- At least **1 GB RAM** + 2 GB swap
+- Supported architectures: `linux/amd64`, `linux/arm64`
+
+## TrueNAS Deployment
+
+Use the **Custom App** feature in TrueNAS SCALE:
+1. Image: `ghcr.io/gorunjinian/bitcoind-truenas-bip110:latest`
+2. Ports: `8333` (P2P), `8332` (RPC)
+3. Volume: Mount persistent storage to `/bitcoin/.bitcoin`
+
+## Documentation
+
+Additional documentation in the [docs folder](docs).
+
+## License
+
+MIT License - see [LICENSE](LICENSE)
