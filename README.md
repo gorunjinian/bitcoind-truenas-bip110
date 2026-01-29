@@ -1,9 +1,9 @@
-Bitcoind for Docker
+Bitcoind for Docker (BIP110 UASF)
 ===================
 
 Docker image that runs the Bitcoin bitcoind node in a container for easy deployment.
 
-***Note: Credit for this image goes almost entirely to https://github.com/kylemanna/docker-bitcoind, I have added some optimizations and wanted a way to keep more easily up to date.***
+***Note: Credit for this image goes almost entirely to https://github.com/kylemanna/docker-bitcoind. Retropex added optimizations and I modified the dockerfile to get the release from GitHub instead of BitcoinKnots.org so that we use BIP110.***
 
 
 Requirements
